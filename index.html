@@ -1,0 +1,128 @@
+<html>
+	<head>
+		<title>My first Three.js app</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 50; height: 50 }
+		</style>
+	</head>
+	<body>
+		<script src="js/three.min.js"></script>
+		<script src="js/AudioController.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+		<script src = "js/Stream.js"               ></script>
+		<script src = "js/AudioController.js"      ></script>
+		<script src = "js/AudioTexture.js"         ></script>
+		<script src = "orbitingGroup.js"         ></script>
+		
+
+		<script>
+
+			var audio = new Audio();
+
+			audio.src = 'bloodmoon.mp3';
+			audio.controls = true;
+			audio.loop = false;
+			//audio.autoplay = true;
+
+			var canvas, ctx, source, context, analyser, fbc_array, bars, bar_x, bar_width, bar_height;
+			var lightOffset = 0;
+
+
+			var audioController = new AudioController();
+			var stream = new Stream('bloodmoon.mp3', audioController );
+
+			var scene = new THREE.Scene();
+			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+
+			var renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+			
+			//initialize orbiting segment
+			
+			var orbitGroup1 = new orbitingGroup (-5, 40, 6, 40, 0.5);
+
+			var numSpheres = 50;
+			var orbitRadius = 10;
+			var sphereRadius = 0.2;
+
+			var sphereGroup = new THREE.Object3D();
+			//scene.add(sphereGroup);
+
+			var sphereGeometry = new THREE.SphereGeometry(sphereRadius,32,32);
+			var material = new THREE.MeshPhongMaterial( { color: 0xFF0000 } );
+
+			for ( var i = 0; i < numSpheres; i++) {
+
+				var orbitingSphere = new THREE.Mesh(sphereGeometry, material);
+				orbitingSphere.position.x = orbitRadius*Math.cos(2*i*Math.PI/numSpheres); 
+				orbitingSphere.position.y = orbitRadius*Math.sin(2*i*Math.PI/numSpheres);
+				orbitingSphere.position.z = 0;
+				sphereGroup.add (orbitingSphere);	
+			}
+
+			var group = new THREE.Object3D();
+			scene.add( group );
+
+			//add orbiting segments
+
+			
+
+			var centerGeometry = new THREE.SphereGeometry( 20,32,32 );
+			var centerMaterial = new THREE.MeshPhongMaterial(0xFFFFFF);
+
+			var sphere = new THREE.Mesh( centerGeometry, centerMaterial );
+			sphere.position.z = -50;
+			scene.add( sphere );
+
+			// create a point light
+			var pointLight = new THREE.PointLight( 0xFFFFFF );
+
+			// set its position
+			pointLight.position.x = 10;
+			pointLight.position.y = 50;
+			pointLight.position.z = 130;
+
+			// add to the scene
+			scene.add(pointLight);
+
+			camera.position.z = 10;
+
+    		//audioController.mute.gain.value = 0;
+
+
+			var render = function () {
+				requestAnimationFrame( render );
+
+				var time = Date.now() * 0.000005;
+
+				sphereGroup.rotation.z = time * 60;
+
+				camera.position.z -= time/500000000;
+
+				renderer.render(scene, camera);
+			};
+
+			render();
+
+			
+		</script>
+		<!doctype html>
+<html>
+<head>
+<style>
+div#mp3_player{ width:500px; height:60px; background:#000; padding:5px; margin:50px auto; }
+div#mp3_player > div > audio{  width:500px; background:#000; float:left;  }
+div#mp3_player > canvas{ width:500px; height:30px; background:#002D3C; float:left; }
+</style>
+</head>
+<body>
+<div id="mp3_player">
+  <div id="audio_box"></div>
+  <canvas id="analyser_render"></canvas>
+</div>
+</body>
+</html>
+	</body>
+</html>
