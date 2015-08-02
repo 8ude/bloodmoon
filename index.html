@@ -23,7 +23,7 @@
 			audio.src = 'bloodmoon.mp3';
 			audio.controls = true;
 			audio.loop = false;
-			//audio.autoplay = true;
+			audio.autoplay = true;
 
 			var canvas, ctx, source, context, analyser, fbc_array, bars, bar_x, bar_width, bar_height;
 			var lightOffset = 0;
@@ -41,14 +41,22 @@
 			
 			//initialize orbiting segment
 			
-			var orbitGroup1 = new orbitingGroup (-5, 40, 6, 40, 0.5);
+			var orbitGroups = [];
+			var orbitGroupSize = 50;
 
-			var numSpheres = 50;
+			for (var i = 0; i < orbitGroupSize; i ++) {
+				orbitGroups[i] = new orbitingGroup(-i, Math.random()*40, 6, 40, 0.5);
+			}
+
+			//var orbitGroup1 = new orbitingGroup (-5, -40, 6, 40, 0.5);
+			//var orbitGroup2 = new orbitingGroup (-6, 30, 10, 40, 0.2);
+
+			var numSpheres = 70;
 			var orbitRadius = 10;
 			var sphereRadius = 0.2;
 
 			var sphereGroup = new THREE.Object3D();
-			//scene.add(sphereGroup);
+			scene.add(sphereGroup);
 
 			var sphereGeometry = new THREE.SphereGeometry(sphereRadius,32,32);
 			var material = new THREE.MeshPhongMaterial( { color: 0xFF0000 } );
@@ -73,7 +81,7 @@
 			var centerMaterial = new THREE.MeshPhongMaterial(0xFFFFFF);
 
 			var sphere = new THREE.Mesh( centerGeometry, centerMaterial );
-			sphere.position.z = -50;
+			sphere.position.z = -500;
 			scene.add( sphere );
 
 			// create a point light
@@ -97,9 +105,16 @@
 
 				var time = Date.now() * 0.000005;
 
+				for (var i = 0; i < orbitGroupSize; i ++) {
+					orbitGroups[i].update(time);
+				}
+
+				//orbitGroup1.update(time);
+				//orbitGroup2.update(time);
+
 				sphereGroup.rotation.z = time * 60;
 
-				camera.position.z -= time/500000000;
+				camera.position.z -= time/100000000;
 
 				renderer.render(scene, camera);
 			};

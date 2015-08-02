@@ -22,9 +22,9 @@ function orbitingGroup(zpos, rotspeed, orbitradius, numspheres, sphereradius) {
 
 	scene.add(sphereGroup);
 
-	function update (time) {
+	this.update = function (time) {
 
-		sphereGroup.rotation = time * this.rotSpeed; 
+		sphereGroup.rotation.z = time * this.rotSpeed; 
 
 	}
 }
