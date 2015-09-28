@@ -35,7 +35,7 @@
 			var clock = new THREE.Clock();
 
 			var scene = new THREE.Scene();
-			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
+			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 2000 );
 
 			
 			var renderer = new THREE.WebGLRenderer();
@@ -63,7 +63,7 @@
 
 					object.position.x = Math.random() * (2*boxBounds) - boxBounds;
 					object.position.y = Math.random() * (2*boxBounds) - boxBounds;
-					object.position.z = Math.random() * (2*boxBounds) - boxBounds;
+					object.position.z = -500-(Math.random() * (2*boxBounds) + boxBounds);
 
 					object.rotation.x = Math.random() * 2 * Math.PI;
 					object.rotation.y = Math.random() * 2 * Math.PI;
@@ -75,17 +75,13 @@
 
 					object.castShadow = true;
 					object.receiveShadow = true;
-					object.matrixAutoUpdate = false;
-					object.updateMatrix();
+					object.matrixAutoUpdate = true;
 
 					scene.add( object );
 
 					boxes.push( object );
 
 				}
-
-			//add orbiting segments
-
 
 			var centerGeometry = new THREE.SphereGeometry( 20,32,32 );
 			var centerMaterial = new THREE.MeshPhongMaterial(0xFFFFFF);
@@ -110,15 +106,13 @@
 
     		//audioController.mute.gain.value = 0;
 
-    		stream.play();
+    		//stream.play();
 
     		function update() {
-    			for (var i = 0; i < boxes.length, i++) {
-    				if (boxes[i].position.z < camera.position.z) {
-    					scene.remove(boxes[i]);
-    					boxes.splice(i,1);
-    					boxCreate(boxGeo, 500);
-
+    			for (var i = 0; i < boxes.length; i++) {
+    				//todo - combinin with orbiting group mechanic; maybe removing from boxes[] and adding to orbiting group?  buffer geometry magic? 
+    				if (boxes[i].position.z >= camera.position.z) {
+    					boxes[i].position.z = camera.position.z-2000;
     				} 
     			}
     		}
@@ -128,19 +122,19 @@
     			this.geometry = geo;
     			this.boxBounds = boxbounds;
 
-				var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
+				var object = new THREE.Mesh( this.geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
 
-				object.position.x = Math.random() * (2*boxBounds) - boxBounds;
-				object.position.y = Math.random() * (2*boxBounds) - boxBounds;
-				object.position.z = camera.position.z + 1000;
+				object.position.x = Math.random() * (2*this.boxBounds) - this.boxBounds;
+				object.position.y = Math.random() * (2*this.boxBounds) - this.boxBounds;
+				object.position.z = camera.position.z - 500;
 
 				object.rotation.x = Math.random() * 2 * Math.PI;
 				object.rotation.y = Math.random() * 2 * Math.PI;
 				object.rotation.z = Math.random() * 2 * Math.PI;
 
+				object.scale.z = Math.random() * 2 + 1;
 				object.scale.x = Math.random() * 2 + 1;
 				object.scale.y = Math.random() * 2 + 1;
-				object.scale.z = Math.random() * 2 + 1;
 
 				object.castShadow = true;
 				object.receiveShadow = true;
@@ -148,8 +142,6 @@
 				object.updateMatrix();
 
 				scene.add( object );
-
-				boxes.push( object );
 
     		}
 
@@ -168,13 +160,13 @@
 				//orbitGroup1.update(time);
 				//orbitGroup2.update(time);
 
-				sphereGroup.rotation.z = time * 60;
+				//sphereGroup.rotation.z = time * 60;
 
 				centerSphere.scale.z = (audioController.analyzer.array[20]/20);
 				centerSphere.scale.y = (audioController.analyzer.array[30]/10);
 				centerSphere.scale.x = (audioController.analyzer.array[40]/10);
 
-				console.log(audioController.analyzer.array[40]);
+				//console.log(audioController.analyzer.array[40]);
 
 				camera.position.z -= time/100000000;
 

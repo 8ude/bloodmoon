@@ -31,10 +31,12 @@
 			var raycaster = new THREE.Raycaster();
 			var mouse = new THREE.Vector2();
 
-			var planeOffset = 300;
+			var planeOffset = 400;
 			var minDistance = 150;
 
 			var cursorSphere;
+			var cursorSize;
+			var cursorBoundingBox;
 
 			init ();
 			animate();
@@ -97,8 +99,10 @@
 
 					object.castShadow = true;
 					object.receiveShadow = true;
-					object.matrixAutoUpdate = false;
+					object.matrixAutoUpdate = true;
 					object.updateMatrix();
+
+					console.log(object.scale.length());
 
 					scene.add( object );
 
@@ -108,23 +112,29 @@
 
 				//plane for sphere location/raycasting
 				plane = new THREE.Mesh(
-					new THREE.PlaneBufferGeometry( 2000, 2000, 8, 8 ),
-					new THREE.MeshBasicMaterial( { color: 0x000000, opacity: 0.25, transparent: true } )
+					new THREE.PlaneGeometry( 2000, 2000, 8, 8 ),
+					new THREE.MeshBasicMaterial( { visible: false } )
 				);
-				plane.visible = false;
+				//plane.visible = false;
 				scene.add( plane );
 
-				var cursorGeometry = new THREE.SphereGeometry(20, 32, 32);
+				var cursorGeometry = new THREE.SphereGeometry(30, 32, 32);
+				
 
 				cursorSphere = new THREE.Mesh ( 
-					cursorGeometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) 
+					cursorGeometry, new THREE.MeshLambertMaterial( { color: 0xff0000 } ) 
 				);
 				scene.add (cursorSphere);
-				orbitingGroup = new THREE.Group()
+				orbitingGroup = new THREE.Group();
 				otherGroup = new THREE.Object3D;
 				orbitingGroup.matrixAutoUpdate = true;
-				scene.add (orbitingGroup, otherGroup);
+				scene.add (orbitingGroup);
 				orbitingGroup.add (cursorSphere);
+
+
+				cursorBoundingBox = new THREE.Box3().setFromObject(cursorSphere);
+				cursorSize = cursorBoundingBox.size().length(); 
+				console.log(cursorSize);
 
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setClearColor( 0xf0f0f0 );
@@ -132,8 +142,8 @@
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				renderer.sortObjects = false;
 
-				renderer.shadowMapEnabled = true;
-				renderer.shadowMapType = THREE.PCFShadowMap;
+				renderer.shadowMap.enabled = true;
+				renderer.shadowMap.type = THREE.PCFShadowMap;
 
 				container.appendChild( renderer.domElement );
 
@@ -170,6 +180,15 @@
 				mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
 				mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
 
+				raycaster.setFromCamera( mouse, camera );
+
+				var intersects = raycaster.intersectObject( plane );
+
+				if (intersects.length > 0) {
+					orbitingGroup.position.set (0,0,0);
+					orbitingGroup.position.copy (intersects[0].point);
+					//console.log(insersects[0].point)
+				} 
 				//
 
 			}
@@ -188,16 +207,11 @@
 
 				requestAnimationFrame( animate );
 
+				plane.lookAt(camera.position);
 				plane.position.z = camera.position.z - planeOffset;
+				//console.log(plane.position);
 
-				raycaster.setFromCamera( mouse, camera );
-
-				var intersects = raycaster.intersectObject( plane );
-
-				if (intersects.length > 0) {
-					//orbitingGroup.position.set (0,0,0);
-					orbitingGroup.position.copy (intersects[0].point);
-				} 
+				var sphereSize = cursorSphere.scale.length();
 
 
 
@@ -209,26 +223,29 @@
 
 
 				for (var i = 0; i < objects.length; i++) {
-					var dx = otherGroup.position.x - objects[i].position.x;
-					var dy = otherGroup.position.y - objects[i].position.y;
-					var dz = otherGroup.position.z - objects[i].position.z;
+					var dx = orbitingGroup.position.x - objects[i].position.x;
+					var dy = orbitingGroup.position.y - objects[i].position.y;
+					var dz = orbitingGroup.position.z - objects[i].position.z;
 
 					var dist = Math.sqrt(dx * dx + dy*dy + dz*dz);
 
-					if (dist < minDistance && objects[i].parent !== otherGroup) {
+					//console.log(objects[i].scale.length());
+					//console.log(sphereSize);
 
-						var posDiff = new THREE.Vector3(objects[i].position.sub(otherGroup.position)this);
+					if (cursorSize/30 > objects[i].scale.length() && dist < minDistance && objects[i].parent !== otherGroup) {
 
-						otherGroup.add(objects[i]);
+					// 	var posDiff = new THREE.Vector3(objects[i].position.sub(otherGroup.position));
 
-						objects[i].position = posDiff;
-						console.log (objects[i].position.x);
-						console.log (orbitingGroup.position.x);
-						objects[i].updateMatrixWorld();
+						orbitingGroup.add(objects[i]);
+
+					// 	objects[i].position = posDiff;
+					// 	console.log (objects[i].position.x);
+					// 	console.log (orbitingGroup.position.x);
+					 	objects[i].updateMatrixWorld();
 
 					}
 
-					if ( dist < minDistance && objects[i].parent === otherGroup) {
+					if ( dist < minDistance && objects[i].parent === orbitingGroup) {
 
 						objects[i].position.x += (dx) * 0.1;
 						objects[i].position.y += (dy) * 0.1;
@@ -237,7 +254,7 @@
 					}
 				}
 
-				groupFollow();
+				//groupFollow();
 
 				render();
 
@@ -253,13 +270,13 @@
 
 			function groupFollow() {
 
-				var dest = new Vector3(orbitingGroup.position);
+				// var dest = new Vector3(orbitingGroup.position);
 
-				var dPos = new Vector3(subVectors(dest, otherGroup.position)this);
+				// var dPos = new Vector3(subVectors(dest, otherGroup.position)this);
 				
-				dPos.multiplyScalar(0.1)this;
+				// dPos.multiplyScalar(0.1)this;
 
-				otherGroup.position.copy(dPos);
+				// otherGroup.position.copy(dPos);
 			}
 			
 		</script>
