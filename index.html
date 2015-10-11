@@ -22,6 +22,7 @@
      	</div>
 		<script src="js/three.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script>
+		<script src= "js/CollectionGroup.js"		></script>
 		<script src = "js/Stream.js"               ></script>
 		<script src = "js/AudioController.js"      ></script>
 		<script src = "js/AudioTexture.js"         ></script>
@@ -43,7 +44,13 @@
 			var camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 1000 );
 			var speed = 100;
 
+			var _scene1init = false;
+			var _scene2init = false;
+			var sphereGroup = new THREE.Object3D();
+			scene.add(sphereGroup);
+
 			var boxBounds = 1000;
+			var collectionGroup1;
 			
 			var renderer = new THREE.WebGLRenderer();
 			renderer.setSize( window.innerWidth, window.innerHeight );
@@ -70,6 +77,8 @@
 			var sphereRadius = 0.2;
 
 			var pickupGeo = new THREE.BoxGeometry( 10, 10, 10 );
+			var time = 0;
+
 
 			/*
 			var numPickups = 30
@@ -82,8 +91,7 @@
 			
 			*/
 
-			var sphereGroup = new THREE.Object3D();
-			scene.add(sphereGroup);
+			
 
 			var sphereGeometry = new THREE.SphereGeometry(sphereRadius,32,32);
 			var material = new THREE.MeshPhongMaterial( { color: 0xFF0000 } );
@@ -98,8 +106,7 @@
 			var centerMaterial = new THREE.MeshPhongMaterial(0xFFFFFF);
 
 			var centerSphere = new THREE.Mesh( centerGeometry, centerMaterial );
-			centerSphere.position.z = -500;
-			scene.add( centerSphere );
+			
 
 			//cursor sphere - controlled by mouse
 			var cursorSphere;
@@ -127,41 +134,12 @@
     		//audioController.mute.gain.value = 0;
     		function init() {
     			//populate pickups
-	    		for (i = 0; i<numPickups; i++) {
-					pickupObject = new THREE.Mesh();
-					var pickupColor = new THREE.Color(Math.random(),0,0)
-					var pickupObject = new THREE.Mesh( pickupGeo, new THREE.MeshLambertMaterial( { color: pickupColor } ) );
+	    		
 
-					pickupObject.position.x = Math.random() * (2*boxBounds) - boxBounds;
-					pickupObject.position.y = Math.random() * (2*boxBounds) - boxBounds;
-					pickupObject.position.z = 10;
+				// initialize collectionGroup
+				collectionGroup1 = new CollectionGroup(true);
 
-					pickupObject.rotation.x = Math.random() * 2 * Math.PI;
-					pickupObject.rotation.y = Math.random() * 2 * Math.PI;
-					pickupObject.rotation.z = Math.random() * 2 * Math.PI;
-
-					pickupObject.scale.x = Math.random() * 2 + 1;
-					pickupObject.scale.y = Math.random() * 2 + 1;
-					pickupObject.scale.z = Math.random() * 2 + 1;
-
-					scene.add( pickupObject );
-
-					pickups.push( pickupObject );
-				}
-				//populate non-interactive
-				for ( var i = 0; i < numSpheres; i++) {
-					var orbitingSphere = new THREE.Mesh(sphereGeometry, material);
-					var sphereSize = Math.random() * 2 + 1; 
-
-					orbitingSphere.scale.x = sphereSize;
-					orbitingSphere.scale.y = sphereSize;
-					orbitingSphere.scale.z = sphereSize;
-
-					orbitingSphere.position.x = orbitRadius*Math.cos(2*i*Math.PI/numSpheres); 
-					orbitingSphere.position.y = orbitRadius*Math.sin(2*i*Math.PI/numSpheres);
-					orbitingSphere.position.z = -2*i;
-					sphereGroup.add (orbitingSphere);	
-				}
+				
 
 				renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
 
@@ -187,100 +165,42 @@
     		}
 
 			var render = function () {
-				update();
-				audioController.update();
-
 				requestAnimationFrame( render );
 
-				var time = clock.getElapsedTime();
+				time = clock.getElapsedTime();
 
 				var delta = clock.getDelta();
 
-				//orbitGroup1.update(time);
-				//orbitGroup2.update(time);
+				update();
+				audioController.update();
 
-				sphereGroup.rotation.z = time;
-
-				centerSphere.position.z = camera.position.z - 1000;
-
-				centerSphere.scale.z = (audioController.analyzer.array[20]/20);
-				centerSphere.scale.y = (audioController.analyzer.array[30]/10);
-				centerSphere.scale.x = (audioController.analyzer.array[40]/10);
-
+				
 				camera.position.z = -speed * time;
 
 				plane.lookAt(camera.position);
 				plane.position.z = camera.position.z - planeOffset;
 				//console.log(plane.position);
 
-				//orbitingGroup.updateMatrixWorld(true);
-
-
-				for (var i = 0; i < pickups.length; i++) {
-					var dx = cursorSphere.position.x - pickups[i].position.x;
-					var dy = cursorSphere.position.y - pickups[i].position.y;
-					var dz = cursorSphere.position.z - pickups[i].position.z;
-
-					var dist = Math.sqrt(dx * dx + dy*dy + dz*dz);
-
-					if (dist < minDistance) {
-						var clonedPickup = pickups[i].clone();
-						pickups[i].position.z = camera.position.z + 20;
-						clonedPickup.matrixAutoUpdate = true;
-						scene.add(clonedPickup);
-						collection.push(clonedPickup);
-						console.log(collection.length);
-						
-					}
-				}
-				collectionFollow();
-				collectScale = 0.9+(time/100);
+				
 
 				renderer.render(scene, camera);
 			};
 
 			function update() {
-    			for (var i = 0; i < numPickups; i++) {
-    				//todo - combinin with orbiting group mechanic; maybe removing from boxes[] and adding to orbiting group?  buffer geometry magic? 
-    				if (audioController.analyzer.array[i]>0 && pickups[i].position.z>camera.position.z) {
-    					pickups[i].scale.x = audioController.analyzer.array[i]/5;
-    					pickups[i].position.z = camera.position.z-500;
-    					
-    				} 
-    				cursorSphere.position.z = plane.position.z;
-    			}
-    		}
+				collectionGroup1.update()
+				cursorSphere.position.z = plane.position.z;
 
-    		function collectionFollow() {
-    			for (var i = 0; i < collection.length; i++) {
-	    			var dx = cursorSphere.position.x - collection[i].position.x;
-					var dy = cursorSphere.position.y - collection[i].position.y;
-					var dz = cursorSphere.position.z - collection[i].position.z;
-
-					var sx = collectScale - collection[i].scale.x;
-					var sy = collectScale - collection[i].scale.y;
-					var sz = collectScale - collection[i].scale.z;
-
-					collection[i].rotation.x += 0.01;
-					collection[i].rotation.y -= 0.01;
-
-					collection[i].scale.x += sx * 0.01;
-					collection[i].scale.y += sy * 0.01;
-					collection[i].scale.z += sz * 0.01;
-
-
-					var groupDistance = Math.sqrt(dx * dx + dy*dy + dz*dz);
-
-					if (groupDistance < collectionMinDist) {
-						collection[i].position.x -= (dx) * 0.01;
-						collection[i].position.y -= (dy) * 0.01;
-						collection[i].position.z -= (dz) * 0.01;
+				if (time < 10) {
+					if (_scene1init = false) {
+						scene1Init();
+						_scene1init = true;
 					} else {
-						collection[i].position.x += (dx) * 0.01;
-						collection[i].position.y += (dy) * 0.01;
-						collection[i].position.z += (dz) * 0.01;
+						scene1Update();
 					}
+				} else {
+					scene2();
 				}
+    			
     		}
 
 			//CONTROLS:
@@ -310,6 +230,78 @@
 					//console.log(insersects[0].point)
 				} 
 				//
+
+			}
+
+			function scene1Init() {
+				
+				//TODO: move to a scene1Init function
+				for (i = 0; i<numPickups; i++) {
+					pickupObject = new THREE.Mesh();
+					var pickupColor = new THREE.Color(Math.random(),0,0)
+					var pickupObject = new THREE.Mesh( pickupGeo, new THREE.MeshLambertMaterial( { color: pickupColor } ) );
+
+					pickupObject.position.x = Math.random() * (2*boxBounds) - boxBounds;
+					pickupObject.position.y = Math.random() * (2*boxBounds) - boxBounds;
+					pickupObject.position.z = 10;
+
+					pickupObject.rotation.x = Math.random() * 2 * Math.PI;
+					pickupObject.rotation.y = Math.random() * 2 * Math.PI;
+					pickupObject.rotation.z = Math.random() * 2 * Math.PI;
+
+					pickupObject.scale.x = Math.random() * 2 + 1;
+					pickupObject.scale.y = Math.random() * 2 + 1;
+					pickupObject.scale.z = Math.random() * 2 + 1;
+
+					scene.add( pickupObject );
+
+					pickups.push( pickupObject );
+				}
+
+				for ( var i = 0; i < numSpheres; i++) {
+					var orbitingSphere = new THREE.Mesh(sphereGeometry, material);
+					var sphereSize = Math.random() * 2 + 1; 
+
+					orbitingSphere.scale.x = sphereSize;
+					orbitingSphere.scale.y = sphereSize;
+					orbitingSphere.scale.z = sphereSize;
+
+					orbitingSphere.position.x = orbitRadius*Math.cos(2*i*Math.PI/numSpheres); 
+					orbitingSphere.position.y = orbitRadius*Math.sin(2*i*Math.PI/numSpheres);
+					orbitingSphere.position.z = camera.position.z - 2*i;
+					sphereGroup.add (orbitingSphere);	
+				}
+			}
+
+				//TODO - move to a scene1Update function
+				
+			function scene1Update() {
+				for (var i = 0; i < numPickups; i++) {
+				//todo - combinin with orbiting group mechanic; maybe removing from boxes[] and adding to orbiting group?  buffer geometry magic? 
+    				if (audioController.analyzer.array[i]>0 && pickups[i].position.z>camera.position.z) {
+    					pickups[i].scale.x = audioController.analyzer.array[i]/5;
+    					pickups[i].position.z = camera.position.z-500;
+    					
+    				} 
+				}
+			
+				sphereGroup.rotation.z = time;
+	    	}
+
+			function scene2() {
+
+				if (_scene2init = false) {
+					centerSphere.position.z = camera.position-500;
+					scene.add( centerSphere );
+					_scene2init = true;
+				} else {
+
+					centerSphere.position.z = camera.position.z - 1000;
+
+					centerSphere.scale.z = (audioController.analyzer.array[20]/20);
+					centerSphere.scale.y = (audioController.analyzer.array[30]/10);
+					centerSphere.scale.x = (audioController.analyzer.array[40]/10);
+				}
 
 			}
 
