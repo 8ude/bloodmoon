@@ -13,7 +13,7 @@ function CollectionGroup(_canPickup, otherGroup, _issharing) {
 		if (collection.length > 0){
 			groupPosition = collection[0].position;
 		}
-		if (_canPickup){
+		if (this._canPickup){
 			collectionPickup();
 		}
 		
@@ -35,14 +35,14 @@ function CollectionGroup(_canPickup, otherGroup, _issharing) {
 				clonedPickup.matrixAutoUpdate = true;
 				scene.add(clonedPickup);
 				collection.push(clonedPickup);
-				console.log(collection.length);
+				//console.log(collection.length);
 			} if (collection.length > this.maxSize) {
 
 			}
 		}
 	}
 
-	collectionFollow = function() {
+	function collectionFollow() {
 		for (var i = 0; i < collection.length; i++) {
 			//close distance to cursor
 			var dx = cursorSphere.position.x - collection[i].position.x;

@@ -15,6 +15,7 @@ function AudioController(){
   this.analyzer = this.ctx.createAnalyser();
 
   this.analyzer.frequencyBinCount = 1024;
+
   this.analyzer.array = new Uint8Array( this.analyzer.frequencyBinCount );
 
   this.freqByteData = new Uint8Array( this.analyzer.frequencyBinCount );
