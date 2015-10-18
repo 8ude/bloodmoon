@@ -27,8 +27,9 @@
 		<script src = "js/AudioController.js"      ></script>
 		<script src = "js/AudioTexture.js"         ></script>
 		<script src = "js/FlyControls.js"         ></script>
-		<script src = "js/SpiralSpheres.js"         ></script>
 		<script src = "orbitingGroup.js"         ></script>
+		<script src = "js/SpiralSpheres.js"         ></script>
+		<script src = "js/Tween.js"         ></script>
 		
 
 		<script>
@@ -175,7 +176,7 @@
 				for (i = 0; i<numPickups; i++) {
 					pickupObject = new THREE.Mesh();
 					var pickupColor = new THREE.Color(Math.random(), Math.random() / 2, 0)
-					var pickupObject = new THREE.Mesh( pickupGeo, new THREE.MeshLambertMaterial( { color: pickupColor } ) );
+					var pickupObject = new THREE.Mesh( pickupGeo, new THREE.MeshLambertMaterial( { color: pickupColor, transparent: true, opacity: 1.0 } ) );
 
 					pickupObject.position.x = Math.random() * (2*boxBounds) - boxBounds;
 					pickupObject.position.y = Math.random() * (2*boxBounds) - boxBounds;
@@ -315,14 +316,17 @@
 				spiralGroup.update();
 				spiralGroup2.update();
 
-				for (var i = 0; i < numPickups; i++) {
-				//todo - combinin with orbiting group mechanic; maybe removing from boxes[] and adding to orbiting group?  buffer geometry magic? 
-				var arrayIndex = Math.floor(1024/numPickups) * i;
-    				if (audioController.analyzer.array[2*i]>100 && pickups[i].position.z>camera.position.z) {
-    					pickups[i].scale.x = audioController.analyzer.array[2*i]/(scene2Start+20-time);
+				for (var i = 0; i < numPickups; i++) { 
+					var arrayIndex = Math.floor(1024/numPickups) * i;
+					var audioValue = audioController.analyzer.array[2*i];
+
+    				if (audioValue >100 && pickups[i].position.z>camera.position.z) {
+    					pickups[i].scale.x = audioValue/(scene2Start+20-time);
     					pickups[i].position.z = camera.position.z-(Math.random()*500 + (camera.far-200));
     					
     				} 
+
+    				pickups[i].material.opacity = audioValue/128;
     				pickups[i].scale.y = audioController.analyzer.array[2*i]/(scene2Start+20-time);
 				}
 
@@ -337,8 +341,8 @@
 				centerSphere.position.z = camera.position.z - 1000;
 				if (time >= 30){ 
 					centerSphere.visible = true;
-					var scaleDown = (time-30)/4;
-					if (scaleDown <= 100) {
+					var scaleDown = (time/4;
+					if (scaleDown <= 20) {
 						centerSphere.scale.z = -(audioController.analyzer.array[20]/scaleDown);
 						centerSphere.scale.y = -(audioController.analyzer.array[30]/scaleDown);
 						centerSphere.scale.x = -(audioController.analyzer.array[40]/scaleDown);
@@ -352,13 +356,17 @@
 
 			function scene2Update() {
 
-				for (var i = 0; i < numPickups; i++) {
-					//todo - combinin with orbiting group mechanic; maybe removing from boxes[] and adding to orbiting group?  buffer geometry magic? 
-    				if (audioController.analyzer.array[i]>0 && pickups[i].position.z>camera.position.z) {
-    					pickups[i].scale.x = audioController.analyzer.array[i]/(50);
-    					pickups[i].position.z = camera.position.z-500;
+				for (var i = 0; i < numPickups; i++) { 
+					var arrayIndex = Math.floor(1024/numPickups) * i;
+					var audioValue = audioController.analyzer.array[2*i];
+
+    				if (audioValue >100 && pickups[i].position.z>camera.position.z) {
+    					pickups[i].scale.x = audioValue/64;
+    					pickups[i].position.z = camera.position.z-(Math.random()*500 + (camera.far-200));
     					
     				} 
+
+    				pickups[i].material.opacity = 0.75;
 				}
 
 				centerSphere.position.z = camera.position.z - 1000;
