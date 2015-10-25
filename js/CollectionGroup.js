@@ -1,22 +1,28 @@
-function CollectionGroup(_canPickup, otherGroup, _issharing) {
+function CollectionGroup(_canPickup, otherGroup, _issharing, smoothing) {
 	this.shareGroup = otherGroup;
 	this._canPickup = _canPickup;
 	this._isSharing = _issharing;
 
+	this.groupPosition = new THREE.Vector3();
+
+	var otherGroupPosition = new THREE.Vector3();
 
 	var collection = [];
 	var minDistance = 50;
 	var collectScale = 1;
-	var groupPosition = new THREE.Vector3();
+	var smooth = smoothing;
+	
+	
 
 	this.update = function() {
 		if (collection.length > 0){
-			groupPosition = collection[0].position;
+			this.groupPosition = collection[0].position;
+
 		}
 		if (this._canPickup){
 			collectionPickup();
 		}
-		
+				
 		collectionFollow();
 		collectScale = 0.9+(time/100);
 	}
@@ -36,8 +42,6 @@ function CollectionGroup(_canPickup, otherGroup, _issharing) {
 				scene.add(clonedPickup);
 				collection.push(clonedPickup);
 				//console.log(collection.length);
-			} if (collection.length > this.maxSize) {
-
 			}
 		}
 	}
@@ -45,13 +49,16 @@ function CollectionGroup(_canPickup, otherGroup, _issharing) {
 	function collectionFollow() {
 		for (var i = 0; i < collection.length; i++) {
 			//close distance to cursor
+			
 			var dx = cursorSphere.position.x - collection[i].position.x;
 			var dy = cursorSphere.position.y - collection[i].position.y;
-			var dz = cursorSphere.position.z - collection[i].position.z;
+			var dz = cursorSphere.position.z - collection[i].position.z;			
 
-			collection[i].position.x += (dx) * 0.01;
-			collection[i].position.y += (dy) * 0.01;
-			collection[i].position.z += (dz) * 0.01;
+			collection[i].position.x += (dx) * smooth;
+			collection[i].position.y += (dy) * smooth;
+			if (dz > 20) {
+				collection[i].position.z += (dz) * smooth;
+			} else collection[i].position.z = cursorSphere.position.z + 20
 
 			//scale and rotate
 			var sx = collectScale - collection[i].scale.x;
