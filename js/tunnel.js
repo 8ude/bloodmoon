@@ -13,7 +13,7 @@ function Tunnel (offset, end, audioController) {
 
 	var tunnelRadius = 400;
 	var objectGeo = new THREE.PlaneGeometry(400, 100);
-	var objectMat = new THREE.MeshPhongMaterial( { color: 0xffff00, side: THREE.DoubleSide} );
+	var objectMat = new THREE.MeshBasicMaterial( { color: 0xffffff, side: THREE.DoubleSide} );
 
 	var center = new THREE.Vector3 (0,0,0);
 
@@ -40,12 +40,11 @@ function Tunnel (offset, end, audioController) {
 
 
 		//cant get color to fucking update fuck why the fuck am i so fucking terrible at this
-		//var thisColor = new THREE.Color(0xffffff);
 
 		if (time < endTime) {
 			for( var i = 0; i < numObjects; i++) {
-				//thisColor.setHSL(0.6611, audio.analyzer.array[5]/128, audio.analyzer.array[5]/128);
-				//this.group.children[i].material.color.setHSL( thisColor);
+				//thisColor.setHSL(0.6611, 1, 1);
+				this.group.children[i].material.color.setHSL(0.5,audioController.analyzer.array[20]/512,audioController.analyzer.array[20]/1024);
 				
 			}
 		}
@@ -57,5 +56,9 @@ function Tunnel (offset, end, audioController) {
 		this.group.position.z += delta*speed;
 		this.group.rotation.z += time/100000;
 
+	}
+
+	function tunnelRespawn () {
+		//Todo - make new tunnel when passes camera - randomize tunnel segments, adjust size?
 	}
 }

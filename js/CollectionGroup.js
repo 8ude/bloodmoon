@@ -1,5 +1,5 @@
-function CollectionGroup(_canPickup, otherGroup, _issharing, smoothing) {
-	this.shareGroup = otherGroup;
+function CollectionGroup(_canPickup, _issharing, smoothing) {
+	//this.shareGroup = otherGroup;
 	this._canPickup = _canPickup;
 	this._isSharing = _issharing;
 
@@ -8,11 +8,18 @@ function CollectionGroup(_canPickup, otherGroup, _issharing, smoothing) {
 	var otherGroupPosition = new THREE.Vector3();
 
 	var collection = [];
+	var explosionVectors = [];
+	var expSpeed = 0.75;
 	var minDistance = 50;
 	var collectScale = 1;
 	var smooth = smoothing;
 	
-	
+	for ( i = 0; i < 3000; i++) {
+
+		if (Math.random() < 0.5) {
+			explosionVectors[i] = Math.random() * expSpeed;
+		} else explosionVectors[i] = -Math.random() * expSpeed;
+	}
 
 	this.update = function() {
 		if (collection.length > 0){
@@ -74,6 +81,31 @@ function CollectionGroup(_canPickup, otherGroup, _issharing, smoothing) {
 
 
 			var groupDistance = Math.sqrt(dx * dx + dy*dy + dz*dz);
+		}
+	}
+
+	this.dissapate = function() {
+
+		if (explosionVectors[0] = undefined) {
+
+		}
+
+
+		for (var i = 0; i < collection.length; i++) {
+
+			
+
+			collection[i].position.x += explosionVectors[i];
+			collection[i].position.y += explosionVectors[2*i];
+			
+			collection[i].position.z -= i/2;
+			
+
+
+			
+
+			collection[i].rotation.x += 0.01;
+			collection[i].rotation.y -= 0.01;
 		}
 	}
     		
