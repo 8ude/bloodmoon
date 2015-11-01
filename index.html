@@ -1,6 +1,6 @@
 <html>
 	<head>
-		<title>My first Three.js app</title>
+		<title>Blood Moon Work In Progress</title>
 		<style>
 			body { margin: 0; }
 			canvas { width: 50; height: 50 }
@@ -31,6 +31,8 @@
 		<script src = "js/SpiralSpheres.js"         ></script>
 		<script src = "js/Tween.js"         ></script>
 		<script src = "js/tunnel.js"         ></script>
+		<script src = "js/objectStream.js"         ></script>
+
 		
 
 		<script>
@@ -48,8 +50,8 @@
 			var speed = 100;
 
 			var scene1Start = 0;
-			var scene2Start = 60;
-			var scene3Start = 120;
+			var scene2Start = 15;
+			var scene3Start = 30;
 			var scene4Start = 240;
 			var scene5Start = 300;
 
@@ -60,7 +62,6 @@
 			
 			var scene1Objects = new THREE.Object3D();
 			var sphereGroup = new THREE.Object3D();
-			var spiralGroup; 
 
 			/*******************
 			  scene 2 objects
@@ -73,14 +74,17 @@
 			  scene 3 objects
 			*******************/
 
-
+			var stream1;
+			var scene3Objects = new THREE.Object3D();
 
 			/*******************
 			  scene 4 objects
 			*******************/			
 
 
-
+			/*******************
+			  All scene objects
+			*******************/			
 
 			var boxBounds = 1000;
 			var collectionGroup1;
@@ -99,6 +103,7 @@
 			
 			var numPickups = 250;
 			var pickups = [];
+			var pickupBoxes = [];
 			var minDistance = 50;
 			var collectScale = 1;
 
@@ -176,6 +181,7 @@
 
 				scene1Init();
 				scene2Init();
+				scene3Init();
 
 				renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
 
@@ -209,7 +215,9 @@
 					pickupObject.scale.y = Math.random() * 2 + 1;
 					pickupObject.scale.z = Math.random() * 2 + 1;
 
+					pickupBoxes.push(pickupObject);
 					pickups.push( pickupObject );
+
 
 					scene.add(pickupObject);
 				}
@@ -219,15 +227,10 @@
 
     		function scene1Init() {
 
-				spiralGroup = new SpiralSpheres(150, 1, 100, 30, audioController, 0, scene2Start);
-				spiralGroup2 = new SpiralSpheres(100, 1, 200, 40, audioController, 300, scene2Start);
-
 
 				centerSphere.position.z = camera.position-camera.far;
 				centerSphere.visible = false;
-
-				scene1Objects.add(spiralGroup.spiralGroup, spiralGroup2.spiralGroup); 
-				scene.add(scene1Objects);
+ 
 
 			}
 
@@ -241,6 +244,22 @@
 				scene.add(scene2Objects);
 
 				scene2Objects.visible = false;
+			}
+
+			function scene3Init() {
+
+				var stream1Size = 50;			
+				stream1 = new objectStream(stream1Size, cursorSphere, scene2Objects, 100);
+				
+				scene3Objects.add(stream1.objStream);
+				for (var i = 0; i < stream1Size; i ++) {
+					//scene3Objects.add(stream1.objectArray[i]);
+				}
+
+				//DON'T FORGET THIS LINE!!!!
+				scene.add(scene3Objects);
+				scene3Objects.visible = false;
+
 			}
 
 
@@ -275,10 +294,14 @@
 
 				if (time < scene2Start) {
 					scene1Update();
-				} else {
+					scene3Objects.visible = false;
+				} else if (time > scene2Start && time < scene3Start) {
 					scene1Objects.visible = false;
 					scene2Objects.visible = true;
 					scene2Update();
+				} else {
+					scene3Objects.visible = true;
+					scene3Update();
 				}
     			
     		}
@@ -315,30 +338,22 @@
 			
 				
 			function scene1Update() {
-				spiralGroup.update();
-				spiralGroup2.update();
+
+				pointLight.intensity = 0.25+(audioController.analyzer.array[1]/128)
 
 				for (var i = 0; i < numPickups; i++) { 
 					var arrayIndex = Math.floor(1024/numPickups) * i;
 					var audioValue = audioController.analyzer.array[2*i];
 
-    				if (audioValue >100 && pickups[i].position.z>camera.position.z) {
-    					pickups[i].scale.x = audioValue/(scene2Start+20-time);
-    					pickups[i].position.z = camera.position.z-(Math.random()*500 + (camera.far-200));
+    				if (audioValue >100 && pickupBoxes[i].position.z>camera.position.z) {
+    					pickupBoxes[i].scale.x = audioValue/(scene2Start+20-time);
+    					pickupBoxes[i].position.z = camera.position.z-(Math.random()*500 + (camera.far-200));
     					
     				} 
 
-    				pickups[i].material.opacity = audioValue/128;
-    				pickups[i].scale.y = audioController.analyzer.array[2*i]/(scene2Start+20-time);
+    				pickupBoxes[i].material.opacity = audioValue/128;
+    				pickupBoxes[i].scale.y = audioController.analyzer.array[2*i]/(scene2Start+20-time);
 				}
-
-				//collectionGroup1._canPickup = false;
-			
-				// sphereGroup.rotation.z = time;
-				// var last = sphereGroup.children.length - 1;
-				// if (sphereGroup.children[last].position.z > camera.position.z) {
-				// 	sphereGroup.position.z = camera.position.z - 500;
-				// }
 
 				centerSphere.position.z = camera.position.z - 1000;
 				if (time >= 10){ 
@@ -358,12 +373,12 @@
 					var arrayIndex = Math.floor(1024/numPickups) * i;
 					var audioValue = audioController.analyzer.array[2*i];
 
-    				if (audioValue >100 && pickups[i].position.z>camera.position.z) {
-    					pickups[i].scale.x = audioValue/64;
-    					pickups[i].position.z = camera.position.z-(Math.random()*500 + (camera.far-200));
+    				if (audioValue >100 && pickupBoxes[i].position.z > camera.position.z) {
+    					pickupBoxes[i].scale.x = audioValue/64;
+    					pickupBoxes[i].position.z = camera.position.z-(Math.random()*500 + (camera.far-200));
     				} 
 
-    				pickups[i].material.opacity = 0.75;
+    				pickupBoxes[i].material.opacity = 0.75;
 				}
 
 				centerSphere.position.z = camera.position.z - 1000;
@@ -384,12 +399,35 @@
 					centerSphere.scale.x = 5 * audioController.analyzer.array[40]/128;
 				}
 
-				
 
 				collectionGroup1._canPickup = true;
+				collectionGroup1.update();
 				
 			}
 
+			function scene3Update() {
+
+				if (speed < 600) {
+
+					speed += 0.2;
+
+				}
+
+				stream1.objStream.position.x = -cursorSphere.position.x;
+				stream1.objStream.position.y = -cursorSphere.position.y;
+
+				var speedAdjust = camera.far * Math.sin(6 * time * Math.PI/180);
+				stream1.objStream.position.z = camera.position.z - camera.far + speedAdjust;
+				
+				stream1.update();
+
+				collectionGroup1.update();
+
+			}
+
+			function scene4Update() {
+
+			}
 			
 
 			

@@ -31,6 +31,7 @@
 		<script src = "js/SpiralSpheres.js"         ></script>
 		<script src = "js/Tween.js"         ></script>
 		<script src = "js/tunnel.js"         ></script>
+		<script src = "js/objectStream.js"         ></script>
 		
 
 		<script>
@@ -48,80 +49,11 @@
 			var speed = 100;
 
 			var scene1Start = 0;
-			var scene2Start = 30;
-			var scene3Start = 60;
-
+			var scene2Start = 15;
 
 			/*******************
-			  scene 1 objects
+			  Universal objects
 			*******************/
-
-			
-			var scene1Objects = new THREE.Object3D();
-			var sphereGroup = new THREE.Object3D();
-			var spiralGroup; 
-
-			/*******************
-			  scene 2 objects
-			*******************/
-
-			var scene2Objects = new THREE.Object3D();
-			var tunnel1, tunnel2;
-			
-			/*******************
-			  scene 3 objects
-			*******************/
-
-
-
-			/*******************
-			  scene 4 objects
-			*******************/			
-
-
-
-			/*******************
-			  All scene objects
-			*******************/
-
-
-			var boxBounds = 1000;
-			var collectionGroup1, collectionGroup2;
-
-			
-			var renderer = new THREE.WebGLRenderer();
-			renderer.setSize( window.innerWidth, window.innerHeight );
-			document.body.appendChild( renderer.domElement );
-
-			window.addEventListener( 'resize', onWindowResize, false );
-
-			
-			var numPickups = 250;
-			var pickups = [];
-			var minDistance = 50;
-			var collectScale = 1;
-
-			var collectionMinDist = 50;
-			var collectionMaxDist = 100;
-
-			var numSpheres = 200;
-			var orbitRadius = 10;
-			var sphereRadius = 0.2;
-
-			var pickupGeo = new THREE.BoxGeometry( 10, 10, 10 );
-			var time = 0;
-			var delta;
-
-			
-
-			var sphereGeometry = new THREE.SphereGeometry(sphereRadius,32,32);
-			var material = new THREE.MeshPhongMaterial( { color: 0xFF0000 } );
-
-			
-
-			//add orbiting segments
-			
-
 			//cursor sphere - controlled by mouse
 			var cursorSphere;
 			var plane;
@@ -141,6 +73,66 @@
 
 			scene.add(pointLight);
 
+			/*******************
+			  scene 1 objects
+			*******************/
+
+			
+			var scene1Objects = new THREE.Object3D();
+
+
+			/*******************
+			  scene 2 objects
+			*******************/
+
+			var scene2Objects = new THREE.Object3D();
+			var stream1;
+			
+			/*******************
+			  scene 3 objects
+			*******************/
+
+
+			/*******************
+			  scene 4 objects
+			*******************/			
+
+
+
+
+			var boxBounds = 1000;
+			var collectionGroup1;
+			
+			var renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+
+			window.addEventListener( 'resize', onWindowResize, false );
+
+			
+			var numPickups = 250;
+			var pickups = [];
+			var pickupBlocks = [];
+			var minDistance = 50;
+			var collectScale = 1;
+
+			var collectionMinDist = 50;
+			var collectionMaxDist = 100;
+
+
+			var pickupGeo = new THREE.BoxGeometry( 10, 10, 10 );
+			var time = 0;
+			var delta;
+
+		
+
+			
+
+			//add orbiting segments
+			
+
+			
+
 			camera.position.z = 10;
 
 			init();
@@ -151,11 +143,9 @@
 	    		
 
 				// initialize collectionGroup
-				collectionGroup1 = new CollectionGroup(true, collectionGroup2, false, 0.01);
-				collectionGroup2 = new CollectionGroup(false, collectionGroup1, false, 0.005);
+				collectionGroup1 = new CollectionGroup(true, false, 0.01);
 
-				scene1Init();
-				scene2Init();
+				
 
 				renderer.domElement.addEventListener( 'mousemove', onDocumentMouseMove, false );
 
@@ -189,10 +179,18 @@
 					pickupObject.scale.y = Math.random() * 2 + 1;
 					pickupObject.scale.z = Math.random() * 2 + 1;
 
+					pickupBlocks.push( pickupObject );
+
 					pickups.push( pickupObject );
 
 					scene.add(pickupObject);
+
+					
 				}
+
+				scene1Init();
+				scene2Init();
+
 
 
     		}
@@ -203,14 +201,15 @@
 
 			function scene2Init() {
 				
-				// tunnel1 = new Tunnel(0, scene3Start, audioController);
-				// tunnel2 = new Tunnel(200, scene3Start, audioController);
+				var stream1Size = 50;			
+				stream1 = new objectStream(stream1Size, cursorSphere, scene2Objects, 100);
+				scene2Objects.add(stream1.objStream);
+				for (var i = 0; i < stream1Size; i ++) {
+					scene2Objects.add(stream1.objectArray[i]);
+				}
 
-				// scene2Objects.add(tunnel1.group, tunnel2.group);
-
-				// scene.add(scene2Objects);
-
-				// scene2Objects.visible = false;
+				//DON'T FORGET THIS LINE!!!!
+				scene.add(scene2Objects);
 			}
 
 
@@ -240,14 +239,14 @@
 			};
 
 			function update() {
-				collectionGroup1.update();
-				collectionGroup2.update();
+
 				cursorSphere.position.z = plane.position.z;
 
 				if (time < scene2Start) {
 					scene1Update();
-				} else {
 
+				} else {
+					scene2Objects.visible = true;
 					scene2Update();
 				}
     			
@@ -290,38 +289,42 @@
 					var arrayIndex = Math.floor(1024/numPickups) * i;
 					var audioValue = audioController.analyzer.array[2*i];
 
-    				if (audioValue >100 && pickups[i].position.z>camera.position.z) {
-    					pickups[i].scale.x = audioValue/(scene2Start+20-time);
-    					pickups[i].position.z = camera.position.z-(Math.random()*500 + (camera.far-200));
+    				if (audioValue >100 && pickupBlocks[i].position.z>camera.position.z) {
+    					pickupBlocks[i].scale.x = audioValue/(scene2Start+20-time);
+    					pickupBlocks[i].position.z = camera.position.z-
+    												(Math.random()*500 + (camera.far-200));
     					
     				} 
 
-    				pickups[i].material.opacity = audioValue/128;
-    				pickups[i].scale.y = audioController.analyzer.array[2*i]/(scene2Start+20-time);
+    				pickupBlocks[i].material.opacity = audioValue/128;
+    				pickupBlocks[i].scale.y = audioController.analyzer.array[2*i]/(scene2Start+20-time);
 				}
 
 				collectionGroup1._canPickup = true;
+				collectionGroup1.update();
 			
 
 	    	}
 
 			function scene2Update() {
 
-				for (var i = 0; i < numPickups; i++) { 
-					var arrayIndex = Math.floor(1024/numPickups) * i;
-					var audioValue = audioController.analyzer.array[2*i];
+				if (speed < 600) {
 
-    				if (audioValue >100 && pickups[i].position.z>camera.position.z) {
-    					pickups[i].scale.x = audioValue/64;
-    					pickups[i].position.z = camera.position.z-(Math.random()*500 + (camera.far-200));
-    				} 
+					speed += 0.2;
 
-    				pickups[i].material.opacity = 0.75;
 				}
 
-				collectionGroup1._canPickup = false;
-				collectionGroup2._canPickup = true;
-				
+				stream1.objStream.position.x = -cursorSphere.position.x;
+				stream1.objStream.position.y = -cursorSphere.position.y;
+
+				var speedAjust = 100*sin(time * )
+
+				stream1.objStream.position.z = camera.position.z - camera.far;
+				stream1.update();
+				console.log (cursorSphere.position.x);
+
+				collectionGroup1.update();
+
 			}	
 
 			
@@ -330,4 +333,4 @@
 		</script>
 		<!doctype html>
 	</body>
-</html>
+</html>s

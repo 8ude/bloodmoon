@@ -1,10 +1,11 @@
-function Tunnel (offset, end, audioController) {
+function Tunnel (initPos, end, audioController) {
 	
-	var offset = offset 
+	var offset = 200 
 	var numObjects, tunnelRadius;
 	var endTime = end;
 	var audio = audioController;
 	var speed = 10;
+	var initialPosition = initPos;
 
 
 	var objectGeo;
@@ -32,7 +33,7 @@ function Tunnel (offset, end, audioController) {
 		this.group.add(box);
 	} 
 
-	this.group.position.z = camera.position.z - (camera.far + offset);
+	this.group.position.z = camera.position.z - (camera.far + offset) - initialPosition;
 
 
 

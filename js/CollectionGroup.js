@@ -101,9 +101,6 @@ function CollectionGroup(_canPickup, _issharing, smoothing) {
 			collection[i].position.z -= i/2;
 			
 
-
-			
-
 			collection[i].rotation.x += 0.01;
 			collection[i].rotation.y -= 0.01;
 		}
