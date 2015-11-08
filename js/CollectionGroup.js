@@ -14,7 +14,7 @@ function CollectionGroup(_canPickup, _issharing, smoothing) {
 	var collectScale = 1;
 	var smooth = smoothing;
 	
-	for ( i = 0; i < 3000; i++) {
+	for ( i = 0; i < 5000; i++) {
 
 		if (Math.random() < 0.5) {
 			explosionVectors[i] = Math.random() * expSpeed;

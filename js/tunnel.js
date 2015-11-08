@@ -34,7 +34,7 @@ function Tunnel (initPos, end, audioController) {
 		this.group.add(box);
 	} 
 
-	this.group.position.z = camera.position.z - (camera.far + offset);
+	this.group.position.z = camera.position.z - (camera.far + offset)-initialPosition;
 
 
 
