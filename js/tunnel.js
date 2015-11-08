@@ -1,6 +1,6 @@
 function Tunnel (initPos, end, audioController) {
 	
-	var offset = 200 
+	var offset = 250 
 	var numObjects, tunnelRadius;
 	var endTime = end;
 	var audio = audioController;
@@ -13,14 +13,15 @@ function Tunnel (initPos, end, audioController) {
 	//init
 
 	var tunnelRadius = 400;
-	var objectGeo = new THREE.PlaneGeometry(400, 100);
+	var objectGeo = new THREE.PlaneGeometry(500, 200);
 	var objectMat = new THREE.MeshBasicMaterial( { color: 0xffffff, side: THREE.DoubleSide} );
 
 	var center = new THREE.Vector3 (0,0,0);
 
 
 	this.group = new THREE.Object3D();
-	numObjects = 4 + Math.floor(Math.random() * 4);
+	numObjects = 7;
+	var tunnelRot = Math.random()/40; 
 
 	for (var i = 0; i < numObjects; i++) {
 		var box = new THREE.Mesh(objectGeo, objectMat);
@@ -33,7 +34,7 @@ function Tunnel (initPos, end, audioController) {
 		this.group.add(box);
 	} 
 
-	this.group.position.z = camera.position.z - (camera.far + offset) - initialPosition;
+	this.group.position.z = camera.position.z - (camera.far + offset);
 
 
 
@@ -52,10 +53,11 @@ function Tunnel (initPos, end, audioController) {
 
 		if (this.group.position.z > (camera.position.z + offset)) {
 			this.group.position.z = camera.position.z - (camera.far+offset);
+			tunnelRot = Math.random()/40
 		}
 
 		this.group.position.z += delta*speed;
-		this.group.rotation.z += time/100000;
+		this.group.rotation.z += tunnelRot;
 
 	}
 
