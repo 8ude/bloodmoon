@@ -1,16 +1,17 @@
-var objectStream = function(bufferSize, cursor, scene, endtime) {
+var objectStream = function(bufferSize, cursor, scene, color) {
 	
 	this.cursor = cursor
+	this.objColor = color
 	var thisScene = scene;
 	var buffSize = bufferSize;
 	
 	//this.sphereColor = color;
-	var endTime = endtime;
+
 	this.objectArray = [];
 
 	this.objStream = new THREE.Object3D();
 
-	var material = new THREE.MeshPhongMaterial( { color: 0xff0010 } );
+	var material = new THREE.MeshBasicMaterial( { color: this.objColor, wireframe: true } );
 	var isoGeometry = new THREE.IcosahedronGeometry(5, 0);
 
 	this.objStream.position = new THREE.Vector3 (0,0,0);

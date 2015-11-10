@@ -1,4 +1,4 @@
-function CollectionGroup(_canPickup, _issharing, smoothing) {
+function CollectionGroup(_canPickup, _issharing, smoothing, maxPickups) {
 	//this.shareGroup = otherGroup;
 	this._canPickup = _canPickup;
 	this._isSharing = _issharing;
@@ -13,6 +13,7 @@ function CollectionGroup(_canPickup, _issharing, smoothing) {
 	var minDistance = 50;
 	var collectScale = 1;
 	var smooth = smoothing;
+	var maxPickups = maxPickups;
 	
 	for ( i = 0; i < 5000; i++) {
 
@@ -43,12 +44,24 @@ function CollectionGroup(_canPickup, _issharing, smoothing) {
 			var dist = Math.sqrt(dx * dx + dy*dy + dz*dz);
 
 			if (dist < minDistance) {
-				var clonedPickup = pickups[i].clone();
-				pickups[i].position.z = camera.position.z + 20;
-				clonedPickup.matrixAutoUpdate = true;
-				scene.add(clonedPickup);
-				collection.push(clonedPickup);
-				//console.log(collection.length);
+
+				if (collection.length < maxPickups) {
+
+					var clonedPickup = pickups[i].clone();
+					pickups[i].position.z = camera.position.z + 20;
+					clonedPickup.matrixAutoUpdate = true;
+					scene.add(clonedPickup);
+					collection.push(clonedPickup);
+					//console.log(collection.length);
+				} else {
+					var clonedPickup = pickups[i].clone();
+					pickups[i].position.z = camera.position.z + 20;
+					clonedPickup.matrixAutoUpdate = true;
+					scene.add(clonedPickup);
+					collection.splice(0,1);
+					collection.push(clonedPickup);
+					//console.log(collection.length);
+				}
 			}
 		}
 	}
@@ -86,17 +99,13 @@ function CollectionGroup(_canPickup, _issharing, smoothing) {
 
 	this.dissapate = function() {
 
-		if (explosionVectors[0] = undefined) {
-
-		}
-
 
 		for (var i = 0; i < collection.length; i++) {
 
 			
 
 			collection[i].position.x += explosionVectors[i];
-			collection[i].position.y += explosionVectors[2*i];
+			collection[i].position.y += explosionVectors[i+2];
 			
 			collection[i].position.z -= i/2;
 			
